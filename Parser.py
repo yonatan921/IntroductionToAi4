@@ -22,7 +22,7 @@ class Parser:
         self.max_x = None
         self.max_y = None
         self.blocks: {Edge} = set()
-        self.fragile: {Edge} = set()
+        self.fragile: [Edge] = []
         self.packages: {Package} = set()
         self.aigent = None
         with open(filename, "r") as file:
@@ -38,7 +38,7 @@ class Parser:
                 elif self.command_word(words) == "B":
                     self.blocks.add(self.parse_blocks(words))
                 elif self.command_word(words) == "F":
-                    self.fragile.add(self.parse_fragile(words))
+                    self.fragile.append(self.parse_fragile(words))
                 elif self.command_word(words) == "A":
                     self.aigent = self.parse_aigent(words)
                 elif self.command_word(words) == "P":
@@ -46,7 +46,7 @@ class Parser:
 
         # Set the agent fragile to fragile edges
         self.aigent.fragile_edges = self.fragile
-        x = 5
+
     def command_word(self, words: [str]) -> str:
         return words[0][1]
 
@@ -59,7 +59,7 @@ class Parser:
     def parse_blocks(self, words: [str]) -> Edge:
         org_point = Point(int(words[1]), int(words[2]))
         dst_point = Point(int(words[3]), int(words[4]))
-        return Edge(org_point, dst_point, 1)
+        return Edge(org_point, dst_point, 0)
 
     def parse_fragile(self, words: [str]) -> Edge:
         org_point = Point(int(words[1]), int(words[2]))

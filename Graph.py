@@ -17,7 +17,6 @@ class Graph:
         self.timer = timer
         self.all_packages = packages
         self.turn = 0
-        self.random_edges()
 
     def init_grid(self, max_x, max_y, blocks: {frozenset}):
         self.grid = [[Tile(Point(i, j)) for i in range(max_x + 1)] for j in range(max_y + 1)]
@@ -109,12 +108,13 @@ class Graph:
         self.remove_tile(org_point)
 
     def available_moves(self, my_point: Point) -> [Point]:
-        return [point for point, _ in self.edges[my_point].items() if
-                point not in self.aigent.point + [my_point]]
+        return [point for point, _ in self.edges[my_point].items()]
+
+    def neighbour_point(self, point) -> [Point]:
+        return [Point(point.x + dx, point.y + dy) for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]
+                if 0 <= point.x + dx < len(self.grid[0]) and 0 <= point.y + dy < len(self.grid)]
 
     def edge_cost(self, p1, p2) -> int:
-        if p1 == p2:
-            return 1
         dict1 = self.edges.get(p1)
         return dict1.get(p2)
 
@@ -137,11 +137,20 @@ class Graph:
                 self.remove_edge(edge)
 
     def explore_edges(self):
-        for point in self.available_moves(self.aigent.point):
-            for edge in self.fragile:
-                if point in [edge.v1, edge.v2]:
-                    edge_point = self.edges[point]
-                    if edge.v1 in edge_point or edge.v2 in edge_point:
-                        self.aigent.exist_edge(edge_point)
-                    else:
-                        self.aigent.dose_not_exist_edge(edge)
+        for edge in self.fragile:
+            if self.aigent.point in [edge.v1, edge.v2]:
+                edge_point = self.edges[self.aigent.point]
+                if edge.v1 in edge_point or edge.v2 in edge_point:
+                    self.aigent.exist_edge(edge)
+                else:
+                    self.aigent.dose_not_exist_edge(edge)
+
+    def create_prob_edges(self, believe_state: [Edge]) -> {Point: {Point: int}}:
+        for edge in believe_state:
+            if edge.prob != 0:
+                self.edges[edge.v1][edge.v2] = edge.prob
+                self.edges[edge.v2][edge.v1] = edge.prob
+            elif edge.v1 in self.edges and edge.v2 in self.edges[edge.v1]:
+                del self.edges[edge.v1][edge.v2]
+            if edge.v2 in self.edges and edge.v1 in self.edges[edge.v2]:
+                del self.edges[edge.v2][edge.v1]

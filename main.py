@@ -7,6 +7,7 @@ def main():
     parser = Parser()
     graph = Graph(parser.max_x, parser.max_y, parser.blocks, parser.fragile, parser.aigent, 0, parser.packages)
     game_master = GameMaster(graph)
+    game_master.start_game()
 
 
 if __name__ == '__main__':
