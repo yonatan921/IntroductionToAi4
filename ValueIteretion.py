@@ -1,4 +1,5 @@
 import copy
+from collections import deque
 
 import numpy as np
 
@@ -15,6 +16,8 @@ class ValueIteration:
 
     def run_algo(self) -> np.ndarray:
         target: Point = list(self.graph.aigent.pakages)[0].point_dst
+        if not self.check_connectivity(self.graph.aigent.point, target):
+            return None
         old_grid: np.ndarray = self.create_grid()
         new_grid: np.ndarray = np.copy(old_grid)
         while True:
@@ -27,7 +30,7 @@ class ValueIteration:
                     for point in self.graph.available_moves(current_point):
                         not_broken = self.graph.edge_cost(current_point, point) * (-1 + new_grid[point.y][point.x])
                         broken = (1 - self.graph.edge_cost(current_point, point)) * (
-                                    -1 + new_grid[current_point.y][current_point.x])
+                                -1 + new_grid[current_point.y][current_point.x])
                         total.append(not_broken + broken)
                     if total:
                         new_grid[row][col] = max(total)
@@ -46,3 +49,18 @@ class ValueIteration:
         target: Point = list(self.graph.aigent.pakages)[0].point_dst
         grid[target.y][target.x] = 0
         return grid
+
+    def check_connectivity(self, start: Point, end: Point):
+        visited = set()
+        queue = deque([start])
+
+        while queue:
+            current_vertex = queue.popleft()
+            if current_vertex == end:
+                return True
+            visited.add(current_vertex)
+            for neighbor in self.graph.edges.get(current_vertex):
+                if neighbor not in visited:
+                    queue.append(neighbor)
+
+        return False

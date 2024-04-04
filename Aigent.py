@@ -1,4 +1,5 @@
 import abc
+import sys
 from typing import Tuple
 
 from Node import Node
@@ -79,6 +80,9 @@ class AiAigent(Aigent):
     def make_move(self, graph):
         policies: {Tuple[Edge]: [[int]]} = self.algo.start_algo()
         policy = policies[tuple(self.fragile_edges)]
+        if policy is None:
+            print("This state is irregular")
+            sys.exit(0)
         new_location = self.parse_policy(policy, graph)
         self.move_agent(graph, new_location)
 
