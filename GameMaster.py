@@ -12,6 +12,7 @@ class GameMaster:
         self.update_packages()
         self.graph.aigent.problem = Problem(self.graph, lambda g: g.game_over())
         self.graph.aigent.algo = UncertaintyAlgo(graph)
+        # self.graph.random_edges()
 
     def start_game(self):
         while not self.game_over():
