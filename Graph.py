@@ -153,11 +153,15 @@ class Graph:
     def explore_edges(self):
         for edge in self.fragile:
             if self.aigent.point in [edge.v1, edge.v2]:
-                edge_point = self.edges[self.aigent.point]
-                if edge.v1 in edge_point or edge.v2 in edge_point:
-                    self.aigent.exist_edge(edge)
-                else:
-                    self.aigent.dose_not_exist_edge(edge)
+                # edge_point = self.edges[self.aigent.point]
+                # if edge.v1 in edge_point or edge.v2 in edge_point:
+                #     self.aigent.exist_edge(edge)
+                # else:
+                #     self.aigent.dose_not_exist_edge(edge)
+                random_number = random.random()
+                if random_number <= edge.prob:
+                    self.remove_edge(edge)
+                    self.fragile.remove(edge)
 
     # def create_prob_edges(self, believe_state: [Edge]) -> {Point: {Point: int}}:
     #     for edge in believe_state:
@@ -170,6 +174,7 @@ class Graph:
     #             del self.edges[edge.v2][edge.v1]
 
     def generate_states(self):
+        self.states = {}
         vertices = set()
 
         # Collect all vertices from edges and their neighbors

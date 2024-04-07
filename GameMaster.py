@@ -17,7 +17,7 @@ class GameMaster:
     def start_game(self):
         while not self.game_over():
             print(self)
-            # self.graph.explore_edges()
+            self.graph.explore_edges()
             self.graph.generate_states()
             self.graph.aigent.make_move(self.graph)
             self.graph.timer += 1
