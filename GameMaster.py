@@ -12,12 +12,12 @@ class GameMaster:
         self.update_packages()
         self.graph.aigent.problem = Problem(self.graph, lambda g: g.game_over())
         self.graph.aigent.algo = UncertaintyAlgo(graph)
-        self.graph.random_edges()
 
     def start_game(self):
         while not self.game_over():
             print(self)
-            self.graph.explore_edges()
+            # self.graph.explore_edges()
+            self.graph.generate_states()
             self.graph.aigent.make_move(self.graph)
             self.graph.timer += 1
 

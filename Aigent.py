@@ -1,6 +1,7 @@
 import abc
 import sys
-from typing import Tuple
+from itertools import product
+from typing import Tuple, List
 
 from Node import Node
 from ReturnStatus import ReturnStatus
@@ -77,20 +78,29 @@ class AiAigent(Aigent):
         self.algo = None
         self.fragile_edges: Tuple[Edge] = fragile_edges
 
+
+
     def make_move(self, graph):
-        policies: {Tuple[Edge]: [[int]]} = self.algo.start_algo()
-        policy = policies[tuple(self.fragile_edges)]
-        if policy is None:
+        policies = self.algo.start_algo()
+        print(policies)
+        if policies is None:
             print("This state is irregular")
             sys.exit(0)
-        new_location = self.parse_policy(policy, graph)
+        new_location = self.parse_policy(policies, graph)
         self.move_agent(graph, new_location)
 
-    def parse_policy(self, policy: [[int]], graph) -> Point:
+    def parse_policy(self, policies, graph) -> Point:
+        unknown_policies = {}
+        for state in policies:
+            if all(s == 'U' for s in state[1:]):
+                unknown_policies[state] = policies[state]
         best_point = None
         best_utility = float("-inf")
         for point in graph.available_moves(self.point):
-            utility = policy[point.y][point.x]
+            for state in unknown_policies:
+                if state[0] == point:
+                    utility = unknown_policies[state]
+                    break
             if utility > best_utility:
                 best_utility = utility
                 best_point = point

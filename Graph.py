@@ -1,4 +1,8 @@
 import random
+from itertools import product
+from typing import List, Tuple
+
+import numpy as np
 
 from Aigent import AiAigent
 from Tile import Tile, Package
@@ -13,10 +17,13 @@ class Graph:
         self.relevant_packages = set()
         self.fragile = fragile
         self.aigent: AiAigent = agents
+        self.blocks = blocks
         self.init_grid(max_x, max_y, blocks)
         self.timer = timer
         self.all_packages = packages
         self.turn = 0
+        self.states = {}
+        self.all_states = None
 
     def init_grid(self, max_x, max_y, blocks: {frozenset}):
         self.grid = [[Tile(Point(i, j)) for i in range(max_x + 1)] for j in range(max_y + 1)]
@@ -73,9 +80,16 @@ class Graph:
 
     def remove_edge(self, edge: {Point}):
         p1, p2 = edge.v1, edge.v2
-        if p1 in self.edges:
-            del self.edges[p1][p2]
-            del self.edges[p2][p1]
+        if p1 in self.edges and len(self.edges[p1]) > 0:
+            for point in self.edges[p1]:
+                if p2 == point:
+                    del self.edges[p1][p2]
+                    break
+        if p2 in self.edges and len(self.edges[p2]) > 0:
+            for point in self.edges[p2]:
+                if p1 == point:
+                    del self.edges[p2][p1]
+                    break
 
     def create_neighbor_dict(self):
         num_rows, num_cols = len(self.grid), len(self.grid[0])
@@ -145,12 +159,45 @@ class Graph:
                 else:
                     self.aigent.dose_not_exist_edge(edge)
 
-    def create_prob_edges(self, believe_state: [Edge]) -> {Point: {Point: int}}:
-        for edge in believe_state:
-            if edge.prob != 0:
-                self.edges[edge.v1][edge.v2] = edge.prob
-                self.edges[edge.v2][edge.v1] = edge.prob
-            elif edge.v1 in self.edges and edge.v2 in self.edges[edge.v1]:
-                del self.edges[edge.v1][edge.v2]
-            if edge.v2 in self.edges and edge.v1 in self.edges[edge.v2]:
-                del self.edges[edge.v2][edge.v1]
+    # def create_prob_edges(self, believe_state: [Edge]) -> {Point: {Point: int}}:
+    #     for edge in believe_state:
+    #         if edge.prob != 0:
+    #             self.edges[edge.v1][edge.v2] = edge.prob
+    #             self.edges[edge.v2][edge.v1] = edge.prob
+    #         elif edge.v1 in self.edges and edge.v2 in self.edges[edge.v1]:
+    #             del self.edges[edge.v1][edge.v2]
+    #         if edge.v2 in self.edges and edge.v1 in self.edges[edge.v2]:
+    #             del self.edges[edge.v2][edge.v1]
+
+    def generate_states(self):
+        vertices = set()
+
+        # Collect all vertices from edges and their neighbors
+        for edge, neighbors in self.edges.items():
+            vertices.add(edge)
+            vertices.update(neighbors.keys())
+
+        # Generate states for each vertex
+        for vertex in vertices:
+            # Generate all possible combinations of edge states
+            edge_states = product(*[['T', 'F', 'U'] for _ in range(len(self.fragile))])
+            # Create states for each combination
+            for edge_state in edge_states:
+                # Create the key as a tuple of vertex and edge states
+                state_key = (vertex,) + edge_state
+                # Assign the value as -np.inf
+                self.states[state_key] = -np.inf
+            for edge_state in self.states:
+                if edge_state[0] == list(self.aigent.pakages)[0].point_dst:
+                    self.states[edge_state] = 0
+
+
+    def get_edge(self, point1, point2):
+        for edge in self.edges:
+            if (edge.v1 == point1 and edge.v2 == point2) or (edge.v1 == point2 and edge.v2 == point1):
+                return edge
+
+    def is_fragile(self, p1, p2):
+        for edge in self.fragile:
+            if (edge.v1 == p1 and edge.v2 == p2) or (edge.v1 == p2 and edge.v2 == p1):
+                return edge

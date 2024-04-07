@@ -11,13 +11,9 @@ class UncertaintyAlgo:
         self.graph = graph
 
     def start_algo(self) -> {Tuple[Edge]: [[int]]}:
-        output: {Tuple[Edge]: [[int]]} = {}
-        believe_states: [[Edge]] = self.generate_edge_subsets()
-        for believe_state in believe_states:
-            value_iteration_algo = ValueIteration(believe_state, copy.deepcopy(self.graph))
-            output[tuple(believe_state)] = value_iteration_algo.run_algo()
-
-        return output
+        believe_state = None
+        value_iteration_algo = ValueIteration(believe_state, copy.deepcopy(self.graph))
+        return value_iteration_algo.run_algo()
 
     def generate_edge_subsets(self) -> [[Edge]]:
         subsets = []
