@@ -97,6 +97,7 @@ class AiAigent(Aigent):
         best_point = None
         best_utility = float("-inf")
         for point in graph.available_moves(self.point):
+            utility = None
             for state in unknown_policies:
                 if state[0] == point:
                     utility = unknown_policies[state]
@@ -108,8 +109,9 @@ class AiAigent(Aigent):
 
     def exist_edge(self, edge: Edge):
         index = self.fragile_edges.index(edge)
-        self.fragile_edges[index] = Edge(edge.v1, edge.v2, 1)
+        self.fragile_edges[index] = None
 
     def dose_not_exist_edge(self, edge: Edge):
         index = self.fragile_edges.index(edge)
-        self.fragile_edges[index] = Edge(edge.v1, edge.v2, 0)
+        self.fragile_edges[index] = None
+
