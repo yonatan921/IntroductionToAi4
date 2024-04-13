@@ -1,18 +1,13 @@
-from typing import Tuple
 
 from Graph import Graph
-from Problem import Problem
 from UncertaintyAlgo import UncertaintyAlgo
-from name_tuppels import Edge
 
 
 class GameMaster:
     def __init__(self, graph: Graph):
         self.graph = graph
         self.update_packages()
-        self.graph.aigent.problem = Problem(self.graph, lambda g: g.game_over())
         self.graph.aigent.algo = UncertaintyAlgo(graph)
-        # self.graph.random_edges()
 
     def start_game(self):
         while not self.game_over():
@@ -21,7 +16,6 @@ class GameMaster:
             self.graph.generate_states()
             self.graph.aigent.make_move(self.graph)
             self.graph.timer += 1
-
         print(self)
 
     def game_over(self):

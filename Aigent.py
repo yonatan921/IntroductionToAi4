@@ -1,10 +1,6 @@
 import abc
 import sys
-from itertools import product
-from typing import Tuple, List
-
-from Node import Node
-from ReturnStatus import ReturnStatus
+from typing import Tuple
 from Tile import Tile
 from name_tuppels import Point, Edge
 
@@ -72,21 +68,21 @@ class Aigent(abc.ABC, Tile):
 class AiAigent(Aigent):
     def __init__(self, starting_point: Point, _id, fragile_edges: [Edge]):
         super().__init__(starting_point, _id)
-        self.symbol = f"AI{_id} "
+        self.symbol = f"A"
         self.moves = []
-        self.problem = None
         self.algo = None
         self.fragile_edges: Tuple[Edge] = fragile_edges
 
-
-
     def make_move(self, graph):
-        policies = self.algo.start_algo()
-        print(policies)
-        if policies is None:
+        policy = self.algo.start_algo()
+        if policy is None:
             print("This state is irregular")
             sys.exit(0)
-        new_location = self.parse_policy(policies, graph)
+        print(policy)
+        self.print_policy(policy)
+        new_location = self.parse_policy(policy, graph)
+        print(f"Best move ({new_location.x},{new_location.y})")
+        print("-"*20)
         self.move_agent(graph, new_location)
 
     def parse_policy(self, policies, graph) -> Point:
@@ -107,11 +103,19 @@ class AiAigent(Aigent):
                 best_point = point
         return best_point
 
-    def exist_edge(self, edge: Edge):
-        index = self.fragile_edges.index(edge)
-        self.fragile_edges[index] = None
+    def print_policy(self, policy: {Tuple[Point, str], int}) -> None:
+        uknown_policy = {t[0]: util for t, util in policy.items() if all(val == "U" for val in t[1:])}
+        max_x = max(point.x for point in uknown_policy)
+        max_y = max(point.y for point in uknown_policy)
 
-    def dose_not_exist_edge(self, edge: Edge):
-        index = self.fragile_edges.index(edge)
-        self.fragile_edges[index] = None
+        # Initialize an empty matrix with dimensions (max_y + 1) x (max_x + 1)
+        matrix = [[0] * (max_x + 1) for _ in range(max_y + 1)]
 
+        # Populate the matrix with values from the dictionary
+        for point, value in uknown_policy.items():
+            matrix[point.y][point.x] = value
+
+        print("Utility matrix")
+        # Print the matrix
+        for row in matrix:
+            print(row)

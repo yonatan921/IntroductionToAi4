@@ -1,5 +1,5 @@
-import copy
 from collections import deque
+from typing import Optional
 
 import numpy as np
 
@@ -12,9 +12,8 @@ class ValueIteration:
     def __init__(self, believe_state: [Edge], graph: Graph):
         self.believe_state = believe_state
         self.graph = graph
-        # self.graph.create_prob_edges(believe_state)
 
-    def run_algo(self) -> np.ndarray:
+    def run_algo(self) -> Optional[np.ndarray]:
         target: Point = list(self.graph.aigent.pakages)[0].point_dst
         if not self.check_connectivity(self.graph.aigent.point, target):
             return None
@@ -54,18 +53,18 @@ class ValueIteration:
                 if s == 'U':
                     temp_true = state[:i] + ('T',) + state[i + 1:]
                     temp_false = state[:i] + ('F',) + state[i + 1:]
-                    fragile_edge = self.graph.fragile[i-1]
+                    fragile_edge = self.graph.fragile[i - 1]
                     policy = (fragile_edge[-1] * self.graph.states[temp_true]) + (
                             (1 - fragile_edge[-1]) * self.graph.states[temp_false])
                     self.graph.states[state] = policy
 
         return self.graph.states
 
-
     def visited_all(self, state, new_graph):
         for actual_state in self.graph.states:
             unknown_state = actual_state[1:]
-            if state == unknown_state and self.graph.states[actual_state] == -np.inf and len(new_graph.available_moves(actual_state[0])) > 0:
+            if state == unknown_state and self.graph.states[actual_state] == -np.inf and len(
+                    new_graph.available_moves(actual_state[0])) > 0:
                 return False
         return True
 
@@ -83,13 +82,6 @@ class ValueIteration:
         target_point = list(self.graph.aigent.pakages)[0].point_dst
         grid[target_point.y][target_point.x] = 0
         return grid
-
-    def find_same_point(self, point):
-        points = []
-        for state in self.graph.states:
-            if state[0] == point:
-                points.append(point)
-        return points
 
     def check_connectivity(self, start: Point, end: Point):
         visited = set()

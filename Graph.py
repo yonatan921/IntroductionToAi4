@@ -1,6 +1,5 @@
 import random
 from itertools import product
-from typing import List, Tuple
 
 import numpy as np
 
@@ -59,7 +58,11 @@ class Graph:
         self.relevant_packages = {package for package in self.all_packages if
                                   package.from_time <= self.timer <= package.dead_line and not package.picked_up}
 
-        # self.all_packages -= self.relevant_packages
+        goal: Point = list(self.aigent.pakages)[0].point_dst
+        goal_tile = self.grid[goal.y][goal.x]
+        goal_tile.symbol = "G"
+
+
 
     def can_move(self, location: Point, new_location: Point):
         if location == new_location:
@@ -73,10 +76,9 @@ class Graph:
         return {package.point_dst for package in self.relevant_packages}
 
     def __str__(self):
-        packegs_str = "Left packages " + str([package.to_string() for package in self.all_packages]) + "\n"
         aigents_string = str(self.aigent.string_state()) + "\n"
         matrix_string = "\n".join(" ".join(str(tile) for tile in row) for row in self.grid)
-        return packegs_str + aigents_string + matrix_string + '\n'
+        return aigents_string + matrix_string + '\n'
 
     def remove_edge(self, edge: {Point}):
         p1, p2 = edge.v1, edge.v2
@@ -124,14 +126,6 @@ class Graph:
     def available_moves(self, my_point: Point) -> [Point]:
         return [point for point, _ in self.edges[my_point].items()]
 
-    def neighbour_point(self, point) -> [Point]:
-        return [Point(point.x + dx, point.y + dy) for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]
-                if 0 <= point.x + dx < len(self.grid[0]) and 0 <= point.y + dy < len(self.grid)]
-
-    def edge_cost(self, p1, p2) -> int:
-        dict1 = self.edges.get(p1)
-        return dict1.get(p2)
-
     def __hash__(self):
         return hash(self.__key())
 
@@ -143,35 +137,14 @@ class Graph:
     def __key(self):
         return tuple(self.relevant_packages), tuple(self.fragile), self.aigent
 
-    def random_edges(self):
-        for edge in self.fragile:
-            random_number = random.random()
-            if random_number >= edge.prob:
-                # This edge is blocked
-                self.remove_edge(edge)
-
     def explore_edges(self):
         for edge in self.fragile:
             if self.aigent.point in [edge.v1, edge.v2]:
-                # edge_point = self.edges[self.aigent.point]
-                # if edge.v1 in edge_point or edge.v2 in edge_point:
-                #     self.aigent.exist_edge(edge)
-                # else:
-                #     self.aigent.dose_not_exist_edge(edge)
+
                 random_number = random.random()
                 if random_number <= edge.prob:
                     self.remove_edge(edge)
                     self.fragile.remove(edge)
-
-    # def create_prob_edges(self, believe_state: [Edge]) -> {Point: {Point: int}}:
-    #     for edge in believe_state:
-    #         if edge.prob != 0:
-    #             self.edges[edge.v1][edge.v2] = edge.prob
-    #             self.edges[edge.v2][edge.v1] = edge.prob
-    #         elif edge.v1 in self.edges and edge.v2 in self.edges[edge.v1]:
-    #             del self.edges[edge.v1][edge.v2]
-    #         if edge.v2 in self.edges and edge.v1 in self.edges[edge.v2]:
-    #             del self.edges[edge.v2][edge.v1]
 
     def generate_states(self):
         self.states = {}
@@ -195,14 +168,3 @@ class Graph:
             for edge_state in self.states:
                 if edge_state[0] == list(self.aigent.pakages)[0].point_dst:
                     self.states[edge_state] = 0
-
-
-    def get_edge(self, point1, point2):
-        for edge in self.edges:
-            if (edge.v1 == point1 and edge.v2 == point2) or (edge.v1 == point2 and edge.v2 == point1):
-                return edge
-
-    def is_fragile(self, p1, p2):
-        for edge in self.fragile:
-            if (edge.v1 == p1 and edge.v2 == p2) or (edge.v1 == p2 and edge.v2 == p1):
-                return edge
