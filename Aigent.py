@@ -1,9 +1,6 @@
 import abc
 import sys
 from typing import Tuple
-
-from Node import Node
-from ReturnStatus import ReturnStatus
 from Tile import Tile
 from name_tuppels import Point, Edge
 
@@ -71,35 +68,54 @@ class Aigent(abc.ABC, Tile):
 class AiAigent(Aigent):
     def __init__(self, starting_point: Point, _id, fragile_edges: [Edge]):
         super().__init__(starting_point, _id)
-        self.symbol = f"AI{_id} "
+        self.symbol = f"A"
         self.moves = []
-        self.problem = None
         self.algo = None
         self.fragile_edges: Tuple[Edge] = fragile_edges
 
     def make_move(self, graph):
-        policies: {Tuple[Edge]: [[int]]} = self.algo.start_algo()
-        policy = policies[tuple(self.fragile_edges)]
+        policy = self.algo.start_algo()
         if policy is None:
             print("This state is irregular")
             sys.exit(0)
+        print(policy)
+        self.print_policy(policy)
         new_location = self.parse_policy(policy, graph)
+        print(f"Best move ({new_location.x},{new_location.y})")
+        print("-"*20)
         self.move_agent(graph, new_location)
 
-    def parse_policy(self, policy: [[int]], graph) -> Point:
+    def parse_policy(self, policies, graph) -> Point:
+        unknown_policies = {}
+        for state in policies:
+            if all(s == 'U' for s in state[1:]):
+                unknown_policies[state] = policies[state]
         best_point = None
         best_utility = float("-inf")
         for point in graph.available_moves(self.point):
-            utility = policy[point.y][point.x]
+            utility = None
+            for state in unknown_policies:
+                if state[0] == point:
+                    utility = unknown_policies[state]
+                    break
             if utility > best_utility:
                 best_utility = utility
                 best_point = point
         return best_point
 
-    def exist_edge(self, edge: Edge):
-        index = self.fragile_edges.index(edge)
-        self.fragile_edges[index] = Edge(edge.v1, edge.v2, 1)
+    def print_policy(self, policy: {Tuple[Point, str], int}) -> None:
+        uknown_policy = {t[0]: util for t, util in policy.items() if all(val == "U" for val in t[1:])}
+        max_x = max(point.x for point in uknown_policy)
+        max_y = max(point.y for point in uknown_policy)
 
-    def dose_not_exist_edge(self, edge: Edge):
-        index = self.fragile_edges.index(edge)
-        self.fragile_edges[index] = Edge(edge.v1, edge.v2, 0)
+        # Initialize an empty matrix with dimensions (max_y + 1) x (max_x + 1)
+        matrix = [[0] * (max_x + 1) for _ in range(max_y + 1)]
+
+        # Populate the matrix with values from the dictionary
+        for point, value in uknown_policy.items():
+            matrix[point.y][point.x] = value
+
+        print("Utility matrix")
+        # Print the matrix
+        for row in matrix:
+            print(row)
